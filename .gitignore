@@ -1,0 +1,20 @@
+# Raw downloads and intermediates; the fetch scripts recreate them
+data/cb_2025_us_county_500k/
+data/cb_2025_us_county_500k.zip
+data/raw/
+data/*.vrt
+data/*.tmp
+data/*.tmp.tif
+# 1 m rasters, gigabytes each (GitHub's limit is 100 MB a file): fetch_landuse.sh and
+# fetch_topo.py rebuild them
+data/landuse_2022.tif
+data/dem_1m.tif
+data/hillshade_1m.tif
+# QGIS's statistics caches for those rasters
+data/*.aux.xml
+# SQLite / QGIS side files
+*.gpkg-shm
+*.gpkg-wal
+*.qgz~
+*.qgs~
+__pycache__/
