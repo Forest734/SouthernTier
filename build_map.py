@@ -95,6 +95,7 @@ if os.path.exists(f"{DATA}/landuse_2022.tif"):
     landuse = QgsRasterLayer(f"{DATA}/landuse_2022.tif", "Land use 2021/22 (1 m)")
     landuse.setRenderer(QgsPalettedRasterRenderer(landuse.dataProvider(), 1, [
         QgsPalettedRasterRenderer.Class(v, QColor(c), name) for v, c, name in LANDUSE]))
+    landuse.setOpacity(0.5)  # half transparent: the imagery or elevation shows through
     layers.append(landuse)
 
 # Hillshade, multiplied over whatever is below it (fetch_topo.py)
