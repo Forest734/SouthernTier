@@ -2,11 +2,11 @@
 
 Layers whose data isn't fetched yet (fetch_landuse.sh, fetch_topo.py) are left out."""
 from qgis.core import (
-    Qgis, QgsColorRampShader, QgsCoordinateReferenceSystem, QgsDatumTransform, QgsFillSymbol,
-    QgsInvertedPolygonRenderer, QgsPalettedRasterRenderer, QgsPalLayerSettings, QgsProject,
-    QgsRasterLayer, QgsRasterShader, QgsReferencedRectangle, QgsSingleBandGrayRenderer,
-    QgsSingleBandPseudoColorRenderer, QgsSingleSymbolRenderer, QgsTextBufferSettings, QgsTextFormat,
-    QgsVectorLayer, QgsVectorLayerSimpleLabeling,
+    Qgis, QgsBookmark, QgsCategorizedSymbolRenderer, QgsColorRampShader, QgsCoordinateReferenceSystem,
+    QgsDatumTransform, QgsFillSymbol, QgsInvertedPolygonRenderer, QgsLineSymbol, QgsPalettedRasterRenderer,
+    QgsPalLayerSettings, QgsProject, QgsRasterLayer, QgsRasterShader, QgsReferencedRectangle,
+    QgsRendererCategory, QgsSimpleLineSymbolLayer, QgsSingleBandGrayRenderer, QgsSingleBandPseudoColorRenderer,
+    QgsSingleSymbolRenderer, QgsTextBufferSettings, QgsTextFormat, QgsVectorLayer, QgsVectorLayerSimpleLabeling,
 )
 from qgis.utils import iface
 import os
@@ -134,6 +134,110 @@ counties.setLabeling(QgsVectorLayerSimpleLabeling(lab))
 counties.setLabelsEnabled(True)
 layers.append(counties)
 
+# Connecticut Hill Wildlife Management Area (data/connecticut_hill.gpkg). Its boundary (wma)
+# is OpenStreetMap's (relation 6365094, (c) OpenStreetMap contributors, ODbL), not DEC's own.
+CH = f"{DATA}/connecticut_hill.gpkg"
+wma = QgsVectorLayer(f"{CH}|layername=wma", "Connecticut Hill WMA", "ogr")
+assert wma.isValid()
+wma.setRenderer(QgsSingleSymbolRenderer(QgsFillSymbol.createSimple(
+    {"color": "60,170,60,45", "outline_color": "#1b6e2a", "outline_width": "0.7", "joinstyle": "round"})))
+fmt = QgsTextFormat()
+fmt.setFont(QFont("DejaVu Sans"))
+fmt.setSize(9)
+fmt.setColor(QColor("#14501f"))
+buf = QgsTextBufferSettings()
+buf.setEnabled(True)
+buf.setSize(0.8)
+buf.setColor(QColor(255, 255, 255, 220))
+fmt.setBuffer(buf)
+lab = QgsPalLayerSettings()
+lab.fieldName = "name"
+lab.placement = Qgis.LabelPlacement.Horizontal
+lab.setFormat(fmt)
+lab.scaleVisibility = True
+lab.minimumScale, lab.maximumScale = 150000, 0  # labelled from 1:150,000 in
+wma.setLabeling(QgsVectorLayerSimpleLabeling(lab))
+wma.setLabelsEnabled(True)
+wma.setMapTipTemplate('<b>[% "name" %]</b>, [% "area_ha" %] ha ([% "manager" %]; boundary from [% "source" %])')
+layers.append(wma)
+
+# Today's roads and trails round the WMA (roads), from OpenStreetMap too: what the old roads
+# are compared with. "dirt" is a local road whose surface is mapped unpaved; "abandoned" is
+# what OSM has as an abandoned or disused road.
+roads = QgsVectorLayer(f"{CH}|layername=roads", "Roads and trails, Connecticut Hill", "ogr")
+assert roads.isValid()
+cats = []
+for value, color, width, casing, dash, label in [
+        ("major", "#ffffff", 0.9, "#3a3a3a", None, "State and county roads"),
+        ("local", "#f2f2f2", 0.6, "#3a3a3a", None, "Local roads"),
+        ("dirt", "#e3c99a", 0.55, "#3a3a3a", None, "Dirt roads"),
+        ("service", "#d0d0d0", 0.3, None, None, "Driveways and service roads"),
+        ("track", "#8a5a2b", 0.45, None, "dash", "Tracks"),
+        ("trail", "#2b6fd6", 0.45, None, "dot", "Trails"),
+        ("abandoned", "#c51b8a", 0.45, None, "dash", "Abandoned (as mapped today)")]:
+    sym = QgsLineSymbol.createSimple({"line_color": color, "line_width": str(width),
+                                      "line_style": dash or "solid", "capstyle": "round"})
+    if casing:
+        sym.insertSymbolLayer(0, QgsSimpleLineSymbolLayer(QColor(casing), width + 0.4))
+    cats.append(QgsRendererCategory(value, sym, label))
+roads.setRenderer(QgsCategorizedSymbolRenderer("kind", cats))
+fmt = QgsTextFormat()
+fmt.setFont(QFont("DejaVu Sans"))
+fmt.setSize(7.5)
+fmt.setColor(QColor("#222222"))
+buf = QgsTextBufferSettings()
+buf.setEnabled(True)
+buf.setSize(0.8)
+buf.setColor(QColor(255, 255, 255, 220))
+fmt.setBuffer(buf)
+lab = QgsPalLayerSettings()
+lab.fieldName = "name"
+lab.placement = Qgis.LabelPlacement.Curved
+lab.setFormat(fmt)
+lab.scaleVisibility = True
+lab.minimumScale, lab.maximumScale = 30000, 0  # road names from 1:30,000 in
+roads.setLabeling(QgsVectorLayerSimpleLabeling(lab))
+roads.setLabelsEnabled(True)
+roads.setMapTipTemplate('<b>[% coalesce("name", "highway") %]</b> ([% "highway" %][% \', \' || "surface" %])')
+layers.append(roads)
+
+# Old roads in the WMA (old_roads): roads on the 1893 and 1950 USGS topographic maps, and
+# benches along hillsides, found and traced in the 1 m lidar. Not checked on the ground.
+# Coloured by confidence; the notes say why.
+old = QgsVectorLayer(f"{CH}|layername=old_roads", "Old roads, Connecticut Hill", "ogr")
+assert old.isValid()
+cats = []
+for value, color, width, dash, label in [
+        ("high", "#e8112d", 1.0, False, "High: on the 1893 map, plain in the lidar"),
+        ("medium", "#ff8c00", 0.8, False, "Medium: on an old map, fainter in the lidar"),
+        ("low", "#ffe14d", 0.6, True, "Low: in the lidar only (logging roads?)")]:
+    sym = QgsLineSymbol.createSimple({"line_color": color, "line_width": str(width),
+                                      "line_style": "dash" if dash else "solid", "capstyle": "round"})
+    sym.insertSymbolLayer(0, QgsSimpleLineSymbolLayer(QColor(0, 0, 0, 160), width + 0.5))  # dark casing
+    cats.append(QgsRendererCategory(value, sym, label))
+old.setRenderer(QgsCategorizedSymbolRenderer("confidence", cats))
+fmt = QgsTextFormat()
+bold = QFont("DejaVu Sans")
+bold.setBold(True)
+fmt.setFont(bold)
+fmt.setSize(9)
+fmt.setColor(QColor("#1a1a1a"))
+buf = QgsTextBufferSettings()
+buf.setEnabled(True)
+buf.setSize(1.0)
+buf.setColor(QColor(255, 255, 255, 230))
+fmt.setBuffer(buf)
+lab = QgsPalLayerSettings()
+lab.fieldName = "id"  # the letters in the write-up: A to I
+lab.placement = Qgis.LabelPlacement.Line
+lab.setFormat(fmt)
+lab.scaleVisibility = True
+lab.minimumScale, lab.maximumScale = 60000, 0  # labelled from 1:60,000 in (minimum = most zoomed out)
+old.setLabeling(QgsVectorLayerSimpleLabeling(lab))
+old.setLabelsEnabled(True)
+old.setMapTipTemplate('<b>[% "id" %]</b> ([% "confidence" %], [% "length_m" %] m): [% "notes" %]')
+layers.append(old)
+
 # Layers panel top-down = drawing order top-down. Placed explicitly: addMapLayer's own
 # placement follows whatever is selected in the panel.
 root = project.layerTreeRoot()
@@ -148,6 +252,14 @@ for lyr in layers:
 ext = counties.extent()
 ext.scale(1.05)
 project.viewSettings().setDefaultViewExtent(QgsReferencedRectangle(ext, project.crs()))
+# A bookmark to the WMA and its old roads (View > Panels > Spatial Bookmarks)
+ch = wma.extent()
+ch.combineExtentWith(old.extent())
+ch.grow(600)
+bm = QgsBookmark()
+bm.setName("Connecticut Hill WMA")
+bm.setExtent(QgsReferencedRectangle(ch, project.crs()))
+project.bookmarkManager().addBookmark(bm)
 project.write(f"{ROOT}/southern_tier.qgz")
 if iface:  # not when run headless
     canvas = iface.mapCanvas()
