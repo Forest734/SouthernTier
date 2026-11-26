@@ -5,7 +5,8 @@ from qgis.core import (
     Qgis, QgsBookmark, QgsCategorizedSymbolRenderer, QgsColorRampShader, QgsCoordinateReferenceSystem,
     QgsDatumTransform, QgsFillSymbol, QgsInvertedPolygonRenderer, QgsLineSymbol, QgsPalettedRasterRenderer,
     QgsPalLayerSettings, QgsProject, QgsRasterLayer, QgsRasterShader, QgsReferencedRectangle,
-    QgsRendererCategory, QgsSimpleLineSymbolLayer, QgsSingleBandGrayRenderer, QgsSingleBandPseudoColorRenderer,
+    QgsRendererCategory, QgsRuleBasedLabeling, QgsSimpleLineSymbolLayer, QgsSingleBandGrayRenderer,
+    QgsSingleBandPseudoColorRenderer,
     QgsSingleSymbolRenderer, QgsTextBufferSettings, QgsTextFormat, QgsVectorLayer, QgsVectorLayerSimpleLabeling,
 )
 from qgis.utils import iface
@@ -112,6 +113,69 @@ mask.setRenderer(QgsInvertedPolygonRenderer(QgsSingleSymbolRenderer(QgsFillSymbo
     {"color": "#ffffff", "outline_style": "no"}))))
 layers.append(mask)
 
+
+def text_format(size, color, italic=False, bold=False):
+    """Label text with a white halo, as the other layers have"""
+    fmt = QgsTextFormat()
+    font = QFont("DejaVu Sans")
+    font.setItalic(italic)
+    font.setBold(bold)
+    fmt.setFont(font)
+    fmt.setSize(size)
+    fmt.setColor(QColor(color))
+    buf = QgsTextBufferSettings()
+    buf.setEnabled(True)
+    buf.setSize(0.8)
+    buf.setColor(QColor(255, 255, 255, 220))
+    fmt.setBuffer(buf)
+    return fmt
+
+
+# Open space in all five counties (data/trails_open_space.gpkg, fetch_trails_open_space.py):
+# state, federal and land trust land from NYPAD (NY Natural Heritage Program); the parks and
+# preserves NYPAD lacks or doesn't name from OpenStreetMap ((c) OpenStreetMap contributors,
+# ODbL); and NYPAD's other city, town, county and district land, named only for its owner
+TOS = f"{DATA}/trails_open_space.gpkg"
+space = QgsVectorLayer(f"{TOS}|layername=open_space", "Open space", "ogr")
+assert space.isValid()
+cats = []
+for value, color, alpha, dash, label in [
+        ("national_forest", "#1b5e20", 60, False, "National forest"),
+        ("state_forest", "#2e7d32", 45, False, "State forests"),
+        ("wma", "#558b2f", 45, False, "Wildlife management and multiple use areas"),
+        ("state_park", "#00796b", 55, False, "State parks and rail trails"),
+        ("park", "#26a69a", 60, False, "City, town and county parks"),
+        ("preserve", "#b8860b", 50, False, "Nature preserves (land trusts, Cornell, others)"),
+        ("state_other", "#00796b", 25, True, "Other state land (boat launches, fishing access)"),
+        ("local_land", "#757575", 30, True, "Other city, town, county and district land")]:
+    c = QColor(color)
+    cats.append(QgsRendererCategory(value, QgsFillSymbol.createSimple(
+        {"color": f"{c.red()},{c.green()},{c.blue()},{alpha}", "outline_color": color, "outline_width": "0.5",
+         "outline_style": "dash" if dash else "solid", "joinstyle": "round"}), label))
+space.setRenderer(QgsCategorizedSymbolRenderer("kind", cats))
+# Names by size: the big state forests from 1:500,000 in (the whole map), the smallest from
+# 1:30,000. The local land's owner names only close in
+names = QgsRuleBasedLabeling.Rule(None)
+for expr, scale, fmt in [
+        ("\"kind\" <> 'local_land' AND \"area_ha\" >= 500", 500000, text_format(8, "#14501f", italic=True)),
+        ("\"kind\" <> 'local_land' AND \"area_ha\" >= 50 AND \"area_ha\" < 500", 100000,
+         text_format(7.5, "#14501f", italic=True)),
+        ("\"kind\" <> 'local_land' AND \"area_ha\" < 50", 30000, text_format(7, "#14501f", italic=True)),
+        ("\"kind\" = 'local_land'", 20000, text_format(7, "#555555", italic=True))]:
+    lab = QgsPalLayerSettings()
+    lab.fieldName = "name"
+    lab.placement = Qgis.LabelPlacement.Horizontal
+    lab.setFormat(fmt)
+    rule = QgsRuleBasedLabeling.Rule(lab)
+    rule.setFilterExpression(expr)
+    rule.setMinimumScale(scale)  # most zoomed out
+    names.appendChild(rule)
+space.setLabeling(QgsRuleBasedLabeling(names))
+space.setLabelsEnabled(True)
+space.setMapTipTemplate('<b>[% coalesce("name", \'(no name)\') %]</b>, [% "area_ha" %] ha<br>'
+                        '[% "manager" %][% \', access \' || "access" %]<br><i>[% "source" %]</i>')
+layers.append(space)
+
 # County lines and names on top
 counties = QgsVectorLayer(f"{GPKG}|layername=counties", "Southern Tier counties", "ogr")
 assert counties.isValid()
@@ -202,6 +266,65 @@ roads.setLabelsEnabled(True)
 roads.setMapTipTemplate('<b>[% coalesce("name", "highway") %]</b> ([% "highway" %][% \', \' || "surface" %])')
 layers.append(roads)
 
+# Trail routes in all five counties (trail_routes): OSM's named routes, the Finger Lakes Trail and
+# the rail trails among them, road walks included. A wide pink band under the trails, named
+# from 1:200,000 in
+trail_routes = QgsVectorLayer(f"{TOS}|layername=trail_routes", "Trail routes", "ogr")
+assert trail_routes.isValid()
+trail_routes.setRenderer(QgsSingleSymbolRenderer(QgsLineSymbol.createSimple(
+    {"line_color": "255,64,129,110", "line_width": "1.6", "capstyle": "round", "joinstyle": "round"})))
+lab = QgsPalLayerSettings()
+lab.fieldName = "name"
+lab.placement = Qgis.LabelPlacement.Curved
+lab.setFormat(text_format(8, "#9c0d4f", bold=True))
+line = lab.lineSettings()
+line.setMergeLines(True)  # a route is many pieces: one name for the joined line
+lab.setLineSettings(line)
+lab.repeatDistance, lab.repeatDistanceUnit = 120, Qgis.RenderUnit.Millimeters
+lab.scaleVisibility = True
+lab.minimumScale, lab.maximumScale = 200000, 0
+trail_routes.setLabeling(QgsVectorLayerSimpleLabeling(lab))
+trail_routes.setLabelsEnabled(True)
+trail_routes.setMapTipTemplate('<b>[% "name" %]</b> ([% "route" %]), [% "length_km" %] km in the counties<br>'
+                               '<i>[% "source" %]</i>')
+layers.append(trail_routes)
+
+# Every trail in the five counties (trails): OSM's footpaths, bike paths, rail trails and bridle
+# paths (no sidewalks or crossings, and no footways between buildings), and DEC's trails on
+# state land where OSM has none. A white halo under each, to show on the imagery
+trails = QgsVectorLayer(f"{TOS}|layername=trails", "Trails", "ogr")
+assert trails.isValid()
+cats = []
+for value, color, width, dash, halo, label in [
+        ("footpath", "#7b1e12", 0.45, "dash", True, "Footpaths and hiking trails"),
+        ("multiuse", "#4a148c", 0.6, "solid", True, "Paved and stone-dust paths, rail trails"),
+        ("mtb", "#e65100", 0.45, "dash", True, "Mountain bike trails"),
+        ("horse", "#6d4c41", 0.45, "dash dot", True, "Horse and multi-use trails"),
+        ("snowmobile", "#37474f", 0.45, "dot", True, "Snowmobile trails"),
+        ("private", "#9e9e9e", 0.35, "dot", False, "Private, no public access")]:
+    sym = QgsLineSymbol.createSimple({"line_color": color, "line_width": str(width), "line_style": dash,
+                                      "capstyle": "round"})
+    if halo:
+        sym.insertSymbolLayer(0, QgsSimpleLineSymbolLayer(QColor(255, 255, 255, 120), width + 0.35))
+    cats.append(QgsRendererCategory(value, sym, label))
+trails.setRenderer(QgsCategorizedSymbolRenderer("kind", cats))
+lab = QgsPalLayerSettings()
+lab.fieldName = 'coalesce("name", "routes")'  # a way with no name of its own takes its route's
+lab.isExpression = True
+lab.placement = Qgis.LabelPlacement.Curved
+lab.setFormat(text_format(7, "#4a1208"))
+line = lab.lineSettings()
+line.setMergeLines(True)
+lab.setLineSettings(line)
+lab.scaleVisibility = True
+lab.minimumScale, lab.maximumScale = 25000, 0  # trail names from 1:25,000 in
+trails.setLabeling(QgsVectorLayerSimpleLabeling(lab))
+trails.setLabelsEnabled(True)
+trails.setMapTipTemplate('<b>[% coalesce("name", "routes", \'Trail\') %]</b> ([% "highway" %]'
+                         '[% \', \' || "surface" %]), [% "length_m" %] m[% \'<br>On \' || "routes" %]<br>'
+                         '<i>[% "source" %]</i>')
+layers.append(trails)
+
 # Old roads in the WMA (old_roads): roads on the 1893 and 1950 USGS topographic maps, and
 # benches along hillsides, found and traced in the 1 m lidar. Not checked on the ground.
 # Coloured by confidence; the notes say why.
@@ -245,9 +368,10 @@ root = project.layerTreeRoot()
 for lyr in reversed(layers):
     project.addMapLayer(lyr, False)
     root.addLayer(lyr)
-# Show the imagery; the other rasters are there to switch on
+# Show the imagery; the other rasters are there to switch on. So is the WMA's OSM outline: the
+# open space has the WMA too, from NYPAD
 for lyr in layers:
-    if lyr.name().startswith(("Elevation", "Land use", "Hillshade")):
+    if lyr.name().startswith(("Elevation", "Land use", "Hillshade", "Connecticut Hill WMA")):
         root.findLayer(lyr.id()).setItemVisibilityChecked(False)
 
 ext = counties.extent()
