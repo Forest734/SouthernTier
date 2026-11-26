@@ -18,3 +18,7 @@ data/*.aux.xml
 *.qgz~
 *.qgs~
 __pycache__/
+# build_web.py's working files (removed when a step finishes)
+public/tiles/.*.tmp/
+public/data/*.tmp
+node_modules/

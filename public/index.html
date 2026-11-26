@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Southern Tier Map</title>
+  <meta name="description" content="Trails, open space and old roads in Broome, Chemung, Schuyler, Tioga and Tompkins counties, New York, over aerial imagery, lidar and land use">
+  <meta name="theme-color" content="#fbfbf8" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#161a17" media="(prefers-color-scheme: dark)">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Southern Tier">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="vendor/maplibre-gl/maplibre-gl.css">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <div class="app">
+    <aside id="panel" class="panel" aria-label="Search, places and layers">
+      <header>
+        <p class="eyebrow">Southern Tier of New York</p>
+        <h1>Trails and open space</h1>
+        <p class="lede">Broome, Chemung, Schuyler, Tioga and Tompkins counties, with the old roads of
+          Connecticut Hill. Click the map for what's there.</p>
+      </header>
+
+      <section class="search" role="search">
+        <label for="search">Find a trail, park or forest</label>
+        <input id="search" type="search" autocomplete="off" spellcheck="false" placeholder="Finger Lakes Trail, Danby…"
+               aria-controls="results">
+        <ul id="results" class="results" hidden aria-live="polite"></ul>
+      </section>
+
+      <section>
+        <h2>Go to</h2>
+        <div id="places" class="chips"></div>
+      </section>
+
+      <section>
+        <h2>Layers</h2>
+        <ul id="layers" class="layers"></ul>
+      </section>
+
+      <footer class="credits">
+        <h2>Sources</h2>
+        <p>Imagery: NYS ITS Geospatial Services (2022–2025 flights). Elevation and hillshade: USGS 3DEP
+          1 m lidar. Land use: Chesapeake Bay Program, 2024 Edition (USGS data release
+          <a href="https://doi.org/10.5066/P14BEBRC">10.5066/P14BEBRC</a>). Open space: NYPAD (NY Natural
+          Heritage Program) and OpenStreetMap. Trails: OpenStreetMap and NYS DEC. Counties: U.S. Census
+          Bureau. OpenStreetMap data © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
+          contributors</a>, ODbL.</p>
+        <p>The old roads were traced from the lidar and the 1893 and 1950 USGS topographic maps, and
+          haven't been checked on the ground. Trails on private land aren't open to the public.</p>
+      </footer>
+    </aside>
+
+    <main class="mapwrap">
+      <div id="map"></div>
+      <button id="panel-toggle" class="panel-toggle" type="button" aria-controls="panel" aria-expanded="false">
+        <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M2 4h14M2 9h14M2 14h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <span>Search and layers</span>
+      </button>
+      <div class="scrim" aria-hidden="true"></div>
+      <p id="error" class="error" role="alert" hidden></p>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,342 @@
+{
+ "bookmarks": [
+  {
+   "name": "All five counties",
+   "bounds": [
+    -77.15736,
+    41.94787,
+    -75.31618,
+    42.66856
+   ]
+  },
+  {
+   "name": "Broome County",
+   "bounds": [
+    -76.14871,
+    41.98083,
+    -75.34146,
+    42.43195
+   ]
+  },
+  {
+   "name": "Chemung County",
+   "bounds": [
+    -76.99341,
+    41.98008,
+    -76.51134,
+    42.31201
+   ]
+  },
+  {
+   "name": "Schuyler County",
+   "bounds": [
+    -77.12864,
+    42.21243,
+    -76.59954,
+    42.56157
+   ]
+  },
+  {
+   "name": "Tioga County",
+   "bounds": [
+    -76.58964,
+    41.97982,
+    -76.05794,
+    42.42447
+   ]
+  },
+  {
+   "name": "Tompkins County",
+   "bounds": [
+    -76.71923,
+    42.24548,
+    -76.21769,
+    42.64366
+   ]
+  },
+  {
+   "name": "Connecticut Hill WMA",
+   "bounds": [
+    -76.7418,
+    42.29654,
+    -76.62403,
+    42.40582
+   ]
+  }
+ ],
+ "landuse": {
+  "maxzoom": 13,
+  "opacity": 0.5,
+  "classes": [
+   [
+    11,
+    "#2f6fb0",
+    "Lakes and Reservoirs"
+   ],
+   [
+    12,
+    "#4a88c4",
+    "Riverine Ponds"
+   ],
+   [
+    13,
+    "#5b95cc",
+    "Terrene Ponds"
+   ],
+   [
+    14,
+    "#3b7dc0",
+    "Streams and Rivers"
+   ],
+   [
+    15,
+    "#e8dcc0",
+    "Bare Shore"
+   ],
+   [
+    20,
+    "#3c3c3c",
+    "Roads"
+   ],
+   [
+    21,
+    "#c8312d",
+    "Structures"
+   ],
+   [
+    22,
+    "#8a8a8a",
+    "Other Impervious"
+   ],
+   [
+    23,
+    "#55704a",
+    "Tree Canopy Over Roads"
+   ],
+   [
+    24,
+    "#5f7d4f",
+    "Tree Canopy Over Structures"
+   ],
+   [
+    25,
+    "#677f55",
+    "Tree Canopy Over Other Impervious"
+   ],
+   [
+    26,
+    "#7fa35f",
+    "Tree Canopy Over Turf Grass"
+   ],
+   [
+    27,
+    "#b7d98f",
+    "Turf Grass"
+   ],
+   [
+    28,
+    "#d9c7a5",
+    "Bare Developed"
+   ],
+   [
+    30,
+    "#a87d55",
+    "Extractive Barren"
+   ],
+   [
+    31,
+    "#8c6744",
+    "Extractive Impervious"
+   ],
+   [
+    32,
+    "#6b4fa0",
+    "Solar Field Panel Arrays"
+   ],
+   [
+    33,
+    "#9b86c4",
+    "Solar Field Barren"
+   ],
+   [
+    34,
+    "#a996cf",
+    "Solar Field Herbaceous"
+   ],
+   [
+    36,
+    "#d6c7a0",
+    "Suspended Succession Barren"
+   ],
+   [
+    37,
+    "#d9d39b",
+    "Suspended Succession Herbaceous"
+   ],
+   [
+    38,
+    "#c5c88a",
+    "Suspended Succession Shrubland"
+   ],
+   [
+    40,
+    "#2c6b2f",
+    "Forest"
+   ],
+   [
+    41,
+    "#3f7f3a",
+    "Forested Other"
+   ],
+   [
+    42,
+    "#cfc39a",
+    "Natural Succession Barren"
+   ],
+   [
+    43,
+    "#c8d98e",
+    "Natural Succession Herbaceous"
+   ],
+   [
+    44,
+    "#93b56a",
+    "Natural Succession Shrubland"
+   ],
+   [
+    45,
+    "#b8a273",
+    "Harvested Forest Barren"
+   ],
+   [
+    46,
+    "#bfb47c",
+    "Harvested Forest Herbaceous"
+   ],
+   [
+    50,
+    "#9fc9c0",
+    "Riverine Wetlands Barren"
+   ],
+   [
+    51,
+    "#6fbcae",
+    "Riverine Wetlands Herbaceous"
+   ],
+   [
+    52,
+    "#4fa898",
+    "Riverine Wetlands Shrubland"
+   ],
+   [
+    53,
+    "#3a9384",
+    "Riverine Wetlands Forested Other"
+   ],
+   [
+    54,
+    "#2e8072",
+    "Riverine Wetlands Forest"
+   ],
+   [
+    55,
+    "#7fb1a5",
+    "Riverine Wetlands Harvested Forest"
+   ],
+   [
+    60,
+    "#b3d9d4",
+    "Terrene Wetlands Barren"
+   ],
+   [
+    61,
+    "#86cfc6",
+    "Terrene Wetlands Herbaceous"
+   ],
+   [
+    62,
+    "#64bdb2",
+    "Terrene Wetlands Shrubland"
+   ],
+   [
+    63,
+    "#4aa99d",
+    "Terrene Wetlands Forested Other"
+   ],
+   [
+    64,
+    "#36958a",
+    "Terrene Wetlands Forest"
+   ],
+   [
+    65,
+    "#93c4bc",
+    "Terrene Wetlands Harvested Forest"
+   ],
+   [
+    80,
+    "#e3c58f",
+    "Cropland Barren"
+   ],
+   [
+    81,
+    "#f0cf5a",
+    "Cropland Herbaceous"
+   ],
+   [
+    82,
+    "#d7a9c9",
+    "Orchards and Vineyards Barren"
+   ],
+   [
+    83,
+    "#c98bb9",
+    "Orchards and Vineyards Herbaceous"
+   ],
+   [
+    84,
+    "#b46fa3",
+    "Orchards and Vineyards Shrubland"
+   ],
+   [
+    85,
+    "#ece3b0",
+    "Pasture and Hay Barren"
+   ],
+   [
+    86,
+    "#e6e08a",
+    "Pasture and Hay Herbaceous"
+   ]
+  ]
+ },
+ "elevation": {
+  "maxzoom": 13,
+  "ramp": [
+   [
+    116.0,
+    "#5a8a50"
+   ],
+   [
+    216.1,
+    "#a8c47a"
+   ],
+   [
+    316.2,
+    "#e9e2a6"
+   ],
+   [
+    416.3,
+    "#c9a36b"
+   ],
+   [
+    516.3,
+    "#8a6a4a"
+   ],
+   [
+    616.4,
+    "#f2efe9"
+   ]
+  ]
+ }
+}

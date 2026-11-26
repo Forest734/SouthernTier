@@ -1,0 +1,14 @@
+{
+  "name": "southerntier",
+  "version": "0.1.0",
+  "description": "The Southern Tier counties map as a web app: trails, open space and Connecticut Hill's old roads",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "python3 scripts/serve.py",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
